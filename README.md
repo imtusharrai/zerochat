@@ -8,7 +8,7 @@
 
 [![Deploy to Cloudflare](https://img.shields.io/badge/Deploy-Cloudflare%20Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/workers/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-❤️-ea4aaa?style=for-the-badge)](https://github.com/sponsors/tusharrai)
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-❤️-ea4aaa?style=for-the-badge)](https://github.com/sponsors/imtusharrai)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)]()
 
 ---
@@ -95,7 +95,7 @@ Every small business needs live chat. But look at the options:
 ### Step 1: Clone & Install
 
 ```bash
-git clone https://github.com/tusharrai/zerochat.git
+git clone https://github.com/imtusharrai/zerochat.git
 cd zerochat
 npm install
 ```
@@ -238,7 +238,7 @@ ZeroChat is **100% free and open source**. If it saves you money (Intercom costs
 
 <div align="center">
 
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor_on_GitHub-❤️-ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/tusharrai)
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor_on_GitHub-❤️-ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/imtusharrai)
 
 </div>
 
@@ -281,6 +281,6 @@ npx tsc --noEmit   # Type check
 
 **Built with ❤️ on [Cloudflare Workers](https://workers.cloudflare.com/)**
 
-If ZeroChat helped you, [give it a ⭐](https://github.com/tusharrai/zerochat)
+If ZeroChat helped you, [give it a ⭐](https://github.com/imtusharrai/zerochat)
 
 </div>

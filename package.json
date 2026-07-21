@@ -16,10 +16,10 @@
     "free",
     "open-source"
   ],
-  "homepage": "https://github.com/tusharrai/zerochat",
+  "homepage": "https://github.com/imtusharrai/zerochat",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tusharrai/zerochat.git"
+    "url": "https://github.com/imtusharrai/zerochat.git"
   },
   "license": "MIT",
   "author": "Tushar Rai",

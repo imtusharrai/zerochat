@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZeroChat Pro — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0f0f13;
+      --bg-card: #1a1a24;
+      --bg-card-hover: #22223a;
+      --border: #2a2a3d;
+      --text-primary: #e4e4ed;
+      --text-secondary: #8888a4;
+      --accent: #7c5cff;
+      --accent-light: #9b80ff;
+      --green: #34d399;
+      --orange: #fb923c;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* --- Header --- */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 15, 19, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .header-brand span {
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .pro-badge {
+      background: linear-gradient(135deg, var(--accent), #c084fc);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .header-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* --- Main Layout --- */
+    .main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 32px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    /* --- Stats Grid --- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(124, 92, 255, 0.1);
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .stat-change {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .stat-change.up { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+    .stat-change.down { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    /* --- Content Grid --- */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 900px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .main { padding: 16px; }
+    }
+
+    /* --- Card --- */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .card-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .card-body { padding: 20px; }
+
+    /* --- Conversation List --- */
+    .conv-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+
+    .conv-item:hover { background: var(--bg-card-hover); }
+
+    .conv-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .conv-info { flex: 1; min-width: 0; }
+
+    .conv-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-preview {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .conv-time {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .conv-type {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .type-hot { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+    .type-warm { background: rgba(251, 146, 60, 0.15); color: var(--orange); }
+    .type-cold { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
+    .type-job { background: rgba(136, 136, 164, 0.15); color: var(--text-secondary); }
+
+    /* --- Funnel --- */
+    .funnel-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(42, 42, 61, 0.5);
+    }
+
+    .funnel-item:last-child { border-bottom: none; }
+
+    .funnel-bar-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(42, 42, 61, 0.5);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .funnel-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+
+    .funnel-label {
+      font-size: 12px;
+      width: 100px;
+      flex-shrink: 0;
+    }
+
+    .funnel-count {
+      font-size: 13px;
+      font-weight: 600;
+      width: 40px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* --- AI Usage --- */
+    .ai-meter {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .ai-ring {
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+    }
+
+    .ai-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .ai-ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+    .ai-ring-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 6;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1.5s ease;
+    }
+
+    .ai-ring-text {
+      font-size: 16px;
+      font-weight: 700;
+      fill: var(--text-primary);
+      text-anchor: middle;
+      dominant-baseline: central;
+      transform: rotate(90deg);
+      transform-origin: center;
+    }
+
+    .ai-details { flex: 1; }
+    .ai-detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+      color: var(--text-secondary);
+    }
+    .ai-detail-row span:last-child { color: var(--text-primary); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-brand">
+      ⚡ <span>ZeroChat</span> <span class="pro-badge">PRO</span>
+    </div>
+    <div class="header-status">Worker Active</div>
+  </header>
+
+  <main class="main">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Last 7 days · Auto-refreshes every 30 seconds</p>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(124,92,255,0.15);">💬</div>
+        <div class="stat-label">Total Conversations</div>
+        <div class="stat-value">
+          <span id="stat-total">147</span>
+          <span class="stat-change up">↑ 23%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(248,113,113,0.15);">🔥</div>
+        <div class="stat-label">Hot Leads</div>
+        <div class="stat-value">
+          <span id="stat-hot">18</span>
+          <span class="stat-change up">↑ 12%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(52,211,153,0.15);">🤖</div>
+        <div class="stat-label">AI Neurons Saved</div>
+        <div class="stat-value">
+          <span id="stat-saved">4,320</span>
+          <span class="stat-change up">↑ 38%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(251,146,60,0.15);">⏱️</div>
+        <div class="stat-label">Avg. Response Time</div>
+        <div class="stat-value">
+          <span id="stat-response">1.2s</span>
+          <span class="stat-change down">↓ 0.3s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Recent Conversations -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Conversations</div>
+          <div class="card-badge" style="background: rgba(124,92,255,0.15); color: var(--accent);">Live</div>
+        </div>
+        <div class="card-body" style="padding: 8px 12px;">
+          <div class="conv-item">
+            <div class="conv-avatar" style="background: linear-gradient(135deg, #7c5cff, #c084fc); color: white;">RK</div>
+            <div class="conv-info">
+              <div class="conv-name">Rahul Kumar</div>
+              <div class="conv-preview">What's the price for bulk order of 500 pieces?</div>
+            </div>
+            <div class="conv-meta">
+              <div class="conv-time">2 min ago</div>
+              <div class="conv-type type-hot">🔥 HOT</div>
+            </div>
+          </div>
+          <div class="conv-item">
+            <div class="conv-avatar" style="background: linear-gradient(135deg, #34d399, #6ee7b7); color: white;">PS</div>
+            <div class="conv-info">
+              <div class="conv-name">Priya Sharma</div>
+              <div class="conv-preview">Do you deliver to Bangalore? How many days?</div>
+            </div>
+            <div class="conv-meta">
+              <div class="conv-time">15 min ago</div>
+              <div class="conv-type type-warm">WARM</div>
+            </div>
+          </div>
+          <div class="conv-item">
+            <div class="conv-avatar" style="background: linear-gradient(135deg, #60a5fa, #93c5fd); color: white;">AM</div>
+            <div class="conv-info">
+              <div class="conv-name">Amit Mehta</div>
+              <div class="conv-preview">Hi, I'm looking for a job opening in marketing</div>
+            </div>
+            <div class="conv-meta">
+              <div class="conv-time">1 hr ago</div>
+              <div class="conv-type type-job">JOB</div>
+            </div>
+          </div>
+          <div class="conv-item">
+            <div class="conv-avatar" style="background: linear-gradient(135deg, #fb923c, #fdba74); color: white;">NS</div>
+            <div class="conv-info">
+              <div class="conv-name">Neha Singh</div>
+              <div class="conv-preview">Can I get a sample before placing a large order?</div>
+            </div>
+            <div class="conv-meta">
+              <div class="conv-time">2 hrs ago</div>
+              <div class="conv-type type-warm">WARM</div>
+            </div>
+          </div>
+          <div class="conv-item">
+            <div class="conv-avatar" style="background: linear-gradient(135deg, #8888a4, #b0b0c0); color: white;">VG</div>
+            <div class="conv-info">
+              <div class="conv-name">Vikram Gupta</div>
+              <div class="conv-preview">Just browsing, what do you guys sell?</div>
+            </div>
+            <div class="conv-meta">
+              <div class="conv-time">3 hrs ago</div>
+              <div class="conv-type type-cold">COLD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Visitor Funnel -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Visitor Funnel</div>
+          </div>
+          <div class="card-body">
+            <div class="funnel-item">
+              <div class="funnel-label">Sales</div>
+              <div class="funnel-bar-track">
+                <div class="funnel-bar" style="width:72%; background: linear-gradient(90deg, var(--accent), var(--accent-light));"></div>
+              </div>
+              <div class="funnel-count">106</div>
+            </div>
+            <div class="funnel-item">
+              <div class="funnel-label">Job Seekers</div>
+              <div class="funnel-bar-track">
+                <div class="funnel-bar" style="width:18%; background: var(--text-secondary);"></div>
+              </div>
+              <div class="funnel-count">26</div>
+            </div>
+            <div class="funnel-item">
+              <div class="funnel-label">Vendors</div>
+              <div class="funnel-bar-track">
+                <div class="funnel-bar" style="width:6%; background: var(--orange);"></div>
+              </div>
+              <div class="funnel-count">9</div>
+            </div>
+            <div class="funnel-item">
+              <div class="funnel-label">Complaints</div>
+              <div class="funnel-bar-track">
+                <div class="funnel-bar" style="width:3%; background: var(--red);"></div>
+              </div>
+              <div class="funnel-count">4</div>
+            </div>
+            <div class="funnel-item">
+              <div class="funnel-label">Spam</div>
+              <div class="funnel-bar-track">
+                <div class="funnel-bar" style="width:1.5%; background: #555;"></div>
+              </div>
+              <div class="funnel-count">2</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Usage -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">AI Token Usage</div>
+            <div class="card-badge" style="background: rgba(52,211,153,0.15); color: var(--green);">Healthy</div>
+          </div>
+          <div class="card-body">
+            <div class="ai-meter">
+              <div class="ai-ring">
+                <svg width="80" height="80" viewBox="0 0 80 80">
+                  <circle class="ai-ring-bg" cx="40" cy="40" r="34" />
+                  <circle class="ai-ring-fill" cx="40" cy="40" r="34"
+                    stroke-dasharray="213.6"
+                    stroke-dashoffset="85.4" />
+                  <text class="ai-ring-text" x="40" y="40">60%</text>
+                </svg>
+              </div>
+              <div class="ai-details">
+                <div class="ai-detail-row"><span>Used today</span><span>6,000</span></div>
+                <div class="ai-detail-row"><span>Daily limit</span><span>10,000</span></div>
+                <div class="ai-detail-row"><span>Cached hits</span><span style="color: var(--green)">38%</span></div>
+                <div class="ai-detail-row"><span>Tokens saved</span><span style="color: var(--green)">4,320</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Auto-refresh simulation — in production, this fetches from DO SQLite
+    // via /api/admin/stats endpoint
+    function animateCounters() {
+      document.querySelectorAll('.stat-value span[id]').forEach(el => {
+        const final = el.textContent;
+        el.style.transition = 'opacity 0.3s';
+        el.style.opacity = '0.5';
+        setTimeout(() => { el.style.opacity = '1'; }, 300);
+      });
+    }
+    setInterval(animateCounters, 30000);
+  </script>
+</body>
+</html>

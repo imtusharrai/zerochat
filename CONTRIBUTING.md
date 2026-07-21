@@ -5,7 +5,7 @@ Thanks for wanting to contribute! ZeroChat is a community-driven project and eve
 ## 🚀 Quick Setup
 
 ```bash
-git clone https://github.com/tusharrai/zerochat.git
+git clone https://github.com/imtusharrai/zerochat.git
 cd zerochat
 npm install
 npm run dev    # starts local Cloudflare dev server
