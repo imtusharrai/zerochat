@@ -433,8 +433,7 @@
         <button class="zerochat-send-btn" id="zerochat-send" aria-label="Send message">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
-      </div>
-      <div class="zerochat-footer">Powered by AI · Our team is also notified</div>
+      <div class="zerochat-footer">Developed by Tushar Rai & <a href="https://traiinc.com" target="_blank" style="color: inherit; text-decoration: underline;">Trai inc</a></div>
     </div>
   `;
   document.body.appendChild(container);

@@ -144,7 +144,20 @@ npx wrangler kv key put --binding=THREAD_MAP "business:config" \
 npx wrangler deploy
 ```
 
-### Step 6: Add to Any Website
+### Step 6: Setup Telegram Webhook (For Notifications)
+
+For notifications and replies to work, you MUST configure the Telegram Webhook so Telegram knows where to send your messages:
+1. Ensure your Telegram Bot is added to your Group Chat (`TELEGRAM_CHAT_ID`).
+2. Make the Bot an **Admin** with permission to **Manage Topics** and **Delete Messages**.
+3. After deploying, run this command to register your webhook (replace with your worker URL and your secret):
+
+```bash
+curl -X POST https://your-worker-url.workers.dev/api/setup-webhook \
+  -H "Authorization: Bearer YOUR_TELEGRAM_WEBHOOK_SECRET"
+```
+If successful, it will return `Webhook setup successful!`.
+
+### Step 7: Add to Any Website
 
 ```html
 <script src="https://zerochat.YOUR-SUBDOMAIN.workers.dev/widget.js"></script>
