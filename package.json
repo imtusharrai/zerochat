@@ -1,0 +1,36 @@
+{
+  "name": "zerochat",
+  "version": "1.0.0",
+  "description": "Free, open-source AI chat widget for your website. Runs on Cloudflare Workers free tier. $0/month. Telegram notifications. 5-minute setup.",
+  "keywords": [
+    "chatbot",
+    "live-chat",
+    "ai",
+    "cloudflare-workers",
+    "serverless",
+    "telegram",
+    "widget",
+    "customer-support",
+    "durable-objects",
+    "llama",
+    "free",
+    "open-source"
+  ],
+  "homepage": "https://github.com/tusharrai/zerochat",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tusharrai/zerochat.git"
+  },
+  "license": "MIT",
+  "author": "Tushar Rai",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260714.1",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.0.0"
+  }
+}

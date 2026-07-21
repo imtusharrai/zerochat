@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TraiincBot — AI-powered chat widget that connects your website visitors to Telegram" />
+  <title>TraiincBot — AI Chat Widget Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Gradient background */
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+    }
+
+    /* Nav */
+    nav {
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #e2e8f0;
+    }
+
+    /* Hero */
+    .hero {
+      max-width: 800px;
+      margin: 80px auto 0;
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 24px;
+      font-size: 13px;
+      color: #a5b4fc;
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #f8fafc, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: #94a3b8;
+      max-width: 580px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    /* Features */
+    .features {
+      max-width: 1000px;
+      margin: 100px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #f1f5f9;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+
+    /* Embed code section */
+    .embed-section {
+      max-width: 680px;
+      margin: 60px auto 120px;
+      padding: 0 24px;
+      text-align: center;
+    }
+
+    .embed-section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #f1f5f9;
+    }
+
+    .embed-section p {
+      color: #94a3b8;
+      margin-bottom: 24px;
+      font-size: 15px;
+    }
+
+    .code-block {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-align: left;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      color: #a5b4fc;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .code-block .comment {
+      color: #64748b;
+    }
+
+    .code-block .tag {
+      color: #f472b6;
+    }
+
+    .code-block .attr {
+      color: #38bdf8;
+    }
+
+    .code-block .string {
+      color: #4ade80;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #475569;
+      font-size: 13px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      .hero { margin-top: 48px; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+
+  <nav>
+    <div class="logo">TraiincBot</div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#embed">Embed</a></li>
+      <li><a href="https://github.com" target="_blank">GitHub</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">✨ 100% Free — $0/month</div>
+    <h1>AI chat agent that lives on your website</h1>
+    <p>
+      Your AI sales assistant answers customers instantly. Every conversation is forwarded to your Telegram — reply from your phone, anywhere, anytime.
+    </p>
+  </section>
+
+  <section class="features" id="features">
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3>AI Sales Agent</h3>
+      <p>Powered by Llama 3.1 8B. Answers product questions, pricing, and delivery info using your business context.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <h3>Telegram Integration</h3>
+      <p>Every customer gets their own thread in your Telegram group. Reply from your phone like a normal chat.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Smart Routing</h3>
+      <p>Automatically classifies visitors — customers get AI replies, job seekers and vendors get info collection forms. Zero wasted AI tokens.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔥</div>
+      <h3>Lead Qualification</h3>
+      <p>Detects hot leads and gives them more AI attention. Warm and cold leads are handed off to your team with collected info.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Edge-Powered</h3>
+      <p>Runs on Cloudflare's global edge network. Sub-100ms response times, zero servers to manage, zero cost.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Session Memory</h3>
+      <p>Chat history persists across browser refreshes. Customers pick up right where they left off.</p>
+    </div>
+  </section>
+
+  <section class="embed-section" id="embed">
+    <h2>One line to embed</h2>
+    <p>Paste this script tag onto any website — that's it. Zero configuration needed.</p>
+    <div class="code-block">
+      <span class="comment">&lt;!-- Add before &lt;/body&gt; --&gt;</span><br />
+      <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="string">"https://your-worker.workers.dev/widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+    </div>
+  </section>
+
+  <footer>
+    TraiincBot · Built with Cloudflare Workers, Durable Objects & Workers AI
+  </footer>
+
+  <!-- The chat widget itself -->
+  <script src="/widget.js"></script>
+</body>
+</html>

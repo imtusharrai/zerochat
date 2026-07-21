@@ -1,0 +1,29 @@
+name = "zerochat"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+[assets]
+directory = "./public"
+
+[[durable_objects.bindings]]
+name = "CHAT_ROOM"
+class_name = "ChatRoom"
+
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ChatRoom"]
+new_classes = ["RateLimiter"]
+
+[[kv_namespaces]]
+binding = "THREAD_MAP"
+id = "PLACEHOLDER_REPLACE_AFTER_CREATION"
+
+[ai]
+binding = "AI"
+
+[vars]
+TELEGRAM_CHAT_ID = "PLACEHOLDER_REPLACE_WITH_GROUP_CHAT_ID"
