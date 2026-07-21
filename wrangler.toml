@@ -15,15 +15,14 @@ class_name = "RateLimiter"
 
 [[migrations]]
 tag = "v1"
-new_sqlite_classes = ["ChatRoom"]
-new_classes = ["RateLimiter"]
+new_sqlite_classes = ["ChatRoom", "RateLimiter"]
 
 [[kv_namespaces]]
 binding = "THREAD_MAP"
-id = "PLACEHOLDER_REPLACE_AFTER_CREATION"
+id = "4daf01ff6e5a4542ac6f106d67461f15"
 
 [ai]
 binding = "AI"
 
 [vars]
-TELEGRAM_CHAT_ID = "PLACEHOLDER_REPLACE_WITH_GROUP_CHAT_ID"
+TELEGRAM_CHAT_ID = "-1003941424940"

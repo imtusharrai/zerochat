@@ -18,7 +18,7 @@ Drop a `<script>` tag on any website → customers chat with AI → you reply fr
 
 **No servers. No databases. No monthly bills. Just deploy and go.**
 
-[Live Demo](#live-demo) · [Quick Start](#-quick-start-5-minutes) · [How It Works](#-how-it-works) · [Sponsor](#-support-this-project)
+[Live Demo](https://zerochat.traiinc.workers.dev/) · [Quick Start](#-quick-start-5-minutes) · [How It Works](#-how-it-works) · [Sponsor](#-support-this-project)
 
 </div>
 
