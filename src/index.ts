@@ -185,7 +185,10 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
   try {
     await stub.fetch('https://internal/owner-reply', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Secret': env.TELEGRAM_WEBHOOK_SECRET,
+      },
       body: JSON.stringify({ text: replyText }),
     });
   } catch (err) {

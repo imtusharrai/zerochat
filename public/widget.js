@@ -1,5 +1,5 @@
 /**
- * TraiincBot — Embeddable Chat Widget
+ * ZeroChat — Embeddable Chat Widget
  * 
  * Usage: <script src="https://your-worker.workers.dev/widget.js"></script>
  * Auto-detects API URL from its own script src. Zero configuration.
@@ -10,8 +10,8 @@
   // --- Configuration ---
   const RECONNECT_BASE = 1000;
   const RECONNECT_MAX = 30000;
-  const SESSION_KEY = 'traiinc_session_id';
-  const NAME_KEY = 'traiinc_customer_name';
+  const SESSION_KEY = 'zerochat_session_id';
+  const NAME_KEY = 'zerochat_customer_name';
 
   // Auto-detect API URL from script src
   const scriptEl = document.currentScript;
@@ -38,14 +38,14 @@
   styles.textContent = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-    #traiinc-widget * {
+    #zerochat-widget * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    #traiinc-bubble {
+    #zerochat-bubble {
       position: fixed;
       bottom: 24px;
       right: 24px;
@@ -62,18 +62,18 @@
       z-index: 999999;
     }
 
-    #traiinc-bubble:hover {
+    #zerochat-bubble:hover {
       transform: scale(1.1);
       box-shadow: 0 6px 32px rgba(99, 102, 241, 0.5);
     }
 
-    #traiinc-bubble svg {
+    #zerochat-bubble svg {
       width: 28px;
       height: 28px;
       fill: white;
     }
 
-    #traiinc-bubble .traiinc-badge {
+    #zerochat-bubble .zerochat-badge {
       position: absolute;
       top: -2px;
       right: -2px;
@@ -83,15 +83,15 @@
       border-radius: 50%;
       border: 2px solid white;
       display: none;
-      animation: traiinc-pulse 2s infinite;
+      animation: zerochat-pulse 2s infinite;
     }
 
-    @keyframes traiinc-pulse {
+    @keyframes zerochat-pulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.2); }
     }
 
-    #traiinc-window {
+    #zerochat-window {
       position: fixed;
       bottom: 96px;
       right: 24px;
@@ -104,17 +104,17 @@
       flex-direction: column;
       overflow: hidden;
       z-index: 999999;
-      animation: traiinc-slide-up 0.3s ease;
+      animation: zerochat-slide-up 0.3s ease;
     }
 
-    @keyframes traiinc-slide-up {
+    @keyframes zerochat-slide-up {
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     /* Mobile responsive — full screen */
     @media (max-width: 480px) {
-      #traiinc-window {
+      #zerochat-window {
         bottom: 0;
         right: 0;
         width: 100vw;
@@ -122,17 +122,17 @@
         height: 100dvh;
         border-radius: 0;
       }
-      #traiinc-bubble {
+      #zerochat-bubble {
         bottom: 16px;
         right: 16px;
       }
     }
 
-    #traiinc-window.traiinc-visible {
+    #zerochat-window.zerochat-visible {
       display: flex;
     }
 
-    .traiinc-header {
+    .zerochat-header {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
       padding: 16px 20px;
@@ -142,13 +142,13 @@
       flex-shrink: 0;
     }
 
-    .traiinc-header-info {
+    .zerochat-header-info {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .traiinc-header-avatar {
+    .zerochat-header-avatar {
       width: 36px;
       height: 36px;
       border-radius: 50%;
@@ -159,17 +159,17 @@
       font-size: 18px;
     }
 
-    .traiinc-header-text h3 {
+    .zerochat-header-text h3 {
       font-size: 15px;
       font-weight: 600;
     }
 
-    .traiinc-header-text p {
+    .zerochat-header-text p {
       font-size: 12px;
       opacity: 0.85;
     }
 
-    .traiinc-close {
+    .zerochat-close {
       background: none;
       border: none;
       color: white;
@@ -179,11 +179,11 @@
       transition: background 0.2s;
     }
 
-    .traiinc-close:hover {
+    .zerochat-close:hover {
       background: rgba(255,255,255,0.15);
     }
 
-    .traiinc-messages {
+    .zerochat-messages {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
@@ -193,30 +193,30 @@
       background: #f8fafc;
     }
 
-    .traiinc-msg {
+    .zerochat-msg {
       max-width: 85%;
       padding: 10px 14px;
       border-radius: 16px;
       font-size: 14px;
       line-height: 1.5;
       word-wrap: break-word;
-      animation: traiinc-fade-in 0.2s ease;
+      animation: zerochat-fade-in 0.2s ease;
     }
 
-    @keyframes traiinc-fade-in {
+    @keyframes zerochat-fade-in {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .traiinc-msg.customer {
+    .zerochat-msg.customer {
       align-self: flex-end;
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
       border-bottom-right-radius: 4px;
     }
 
-    .traiinc-msg.ai,
-    .traiinc-msg.bot {
+    .zerochat-msg.ai,
+    .zerochat-msg.bot {
       align-self: flex-start;
       background: white;
       color: #1e293b;
@@ -224,7 +224,7 @@
       border-bottom-left-radius: 4px;
     }
 
-    .traiinc-msg.owner {
+    .zerochat-msg.owner {
       align-self: flex-start;
       background: #ecfdf5;
       color: #065f46;
@@ -232,7 +232,7 @@
       border-bottom-left-radius: 4px;
     }
 
-    .traiinc-msg-badge {
+    .zerochat-msg-badge {
       display: inline-block;
       font-size: 10px;
       font-weight: 600;
@@ -242,36 +242,36 @@
       opacity: 0.7;
     }
 
-    .traiinc-typing {
+    .zerochat-typing {
       align-self: flex-start;
       padding: 12px 16px;
       display: none;
     }
 
-    .traiinc-typing.visible {
+    .zerochat-typing.visible {
       display: flex;
       gap: 4px;
       align-items: center;
     }
 
-    .traiinc-typing span {
+    .zerochat-typing span {
       width: 8px;
       height: 8px;
       background: #94a3b8;
       border-radius: 50%;
-      animation: traiinc-bounce 1.4s infinite ease-in-out;
+      animation: zerochat-bounce 1.4s infinite ease-in-out;
     }
 
-    .traiinc-typing span:nth-child(1) { animation-delay: 0s; }
-    .traiinc-typing span:nth-child(2) { animation-delay: 0.2s; }
-    .traiinc-typing span:nth-child(3) { animation-delay: 0.4s; }
+    .zerochat-typing span:nth-child(1) { animation-delay: 0s; }
+    .zerochat-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .zerochat-typing span:nth-child(3) { animation-delay: 0.4s; }
 
-    @keyframes traiinc-bounce {
+    @keyframes zerochat-bounce {
       0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
       40% { transform: scale(1); opacity: 1; }
     }
 
-    .traiinc-input-area {
+    .zerochat-input-area {
       padding: 12px 16px;
       border-top: 1px solid #e2e8f0;
       display: flex;
@@ -281,7 +281,7 @@
       flex-shrink: 0;
     }
 
-    .traiinc-input-area input {
+    .zerochat-input-area input {
       flex: 1;
       padding: 10px 14px;
       border: 1px solid #e2e8f0;
@@ -291,11 +291,11 @@
       transition: border-color 0.2s;
     }
 
-    .traiinc-input-area input:focus {
+    .zerochat-input-area input:focus {
       border-color: #6366f1;
     }
 
-    .traiinc-send-btn {
+    .zerochat-send-btn {
       width: 40px;
       height: 40px;
       border: none;
@@ -310,16 +310,16 @@
       flex-shrink: 0;
     }
 
-    .traiinc-send-btn:hover {
+    .zerochat-send-btn:hover {
       transform: scale(1.05);
     }
 
-    .traiinc-send-btn:disabled {
+    .zerochat-send-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
 
-    .traiinc-footer {
+    .zerochat-footer {
       text-align: center;
       padding: 6px;
       font-size: 11px;
@@ -330,7 +330,7 @@
     }
 
     /* Name prompt overlay */
-    .traiinc-name-prompt {
+    .zerochat-name-prompt {
       position: absolute;
       inset: 0;
       background: white;
@@ -343,18 +343,18 @@
       z-index: 10;
     }
 
-    .traiinc-name-prompt h3 {
+    .zerochat-name-prompt h3 {
       font-size: 18px;
       color: #1e293b;
     }
 
-    .traiinc-name-prompt p {
+    .zerochat-name-prompt p {
       font-size: 14px;
       color: #64748b;
       text-align: center;
     }
 
-    .traiinc-name-prompt input {
+    .zerochat-name-prompt input {
       width: 100%;
       max-width: 260px;
       padding: 12px 16px;
@@ -365,11 +365,11 @@
       transition: border-color 0.2s;
     }
 
-    .traiinc-name-prompt input:focus {
+    .zerochat-name-prompt input:focus {
       border-color: #6366f1;
     }
 
-    .traiinc-name-prompt button {
+    .zerochat-name-prompt button {
       padding: 12px 32px;
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
@@ -381,11 +381,11 @@
       transition: transform 0.2s;
     }
 
-    .traiinc-name-prompt button:hover {
+    .zerochat-name-prompt button:hover {
       transform: scale(1.05);
     }
 
-    .traiinc-name-skip {
+    .zerochat-name-skip {
       background: none !important;
       color: #94a3b8 !important;
       font-size: 13px !important;
@@ -396,49 +396,49 @@
 
   // --- Build DOM ---
   const container = document.createElement('div');
-  container.id = 'traiinc-widget';
+  container.id = 'zerochat-widget';
   container.innerHTML = `
-    <div id="traiinc-bubble">
+    <div id="zerochat-bubble">
       <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-      <div class="traiinc-badge"></div>
+      <div class="zerochat-badge"></div>
     </div>
-    <div id="traiinc-window">
-      <div class="traiinc-header">
-        <div class="traiinc-header-info">
-          <div class="traiinc-header-avatar">💬</div>
-          <div class="traiinc-header-text">
+    <div id="zerochat-window">
+      <div class="zerochat-header">
+        <div class="zerochat-header-info">
+          <div class="zerochat-header-avatar">💬</div>
+          <div class="zerochat-header-text">
             <h3>Chat with us</h3>
-            <p id="traiinc-status">Connecting...</p>
+            <p id="zerochat-status">Connecting...</p>
           </div>
         </div>
-        <button class="traiinc-close" aria-label="Close chat">
+        <button class="zerochat-close" aria-label="Close chat">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="traiinc-messages" id="traiinc-messages"></div>
-      <div class="traiinc-typing" id="traiinc-typing">
+      <div class="zerochat-messages" id="zerochat-messages"></div>
+      <div class="zerochat-typing" id="zerochat-typing">
         <span></span><span></span><span></span>
       </div>
-      <div class="traiinc-input-area">
-        <input type="text" id="traiinc-input" placeholder="Type a message..." autocomplete="off" />
-        <button class="traiinc-send-btn" id="traiinc-send" aria-label="Send message">
+      <div class="zerochat-input-area">
+        <input type="text" id="zerochat-input" placeholder="Type a message..." autocomplete="off" />
+        <button class="zerochat-send-btn" id="zerochat-send" aria-label="Send message">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
-      <div class="traiinc-footer">Powered by AI · Our team is also notified</div>
+      <div class="zerochat-footer">Powered by AI · Our team is also notified</div>
     </div>
   `;
   document.body.appendChild(container);
 
   // --- DOM refs ---
-  const bubble = document.getElementById('traiinc-bubble');
-  const chatWindow = document.getElementById('traiinc-window');
-  const messagesEl = document.getElementById('traiinc-messages');
-  const inputEl = document.getElementById('traiinc-input');
-  const sendBtn = document.getElementById('traiinc-send');
-  const statusEl = document.getElementById('traiinc-status');
-  const typingEl = document.getElementById('traiinc-typing');
-  const badge = bubble.querySelector('.traiinc-badge');
+  const bubble = document.getElementById('zerochat-bubble');
+  const chatWindow = document.getElementById('zerochat-window');
+  const messagesEl = document.getElementById('zerochat-messages');
+  const inputEl = document.getElementById('zerochat-input');
+  const sendBtn = document.getElementById('zerochat-send');
+  const statusEl = document.getElementById('zerochat-status');
+  const typingEl = document.getElementById('zerochat-typing');
+  const badge = bubble.querySelector('.zerochat-badge');
 
   // --- Name prompt (shown on first open if no name stored) ---
   function showNamePrompt() {
@@ -448,19 +448,19 @@
     }
 
     const prompt = document.createElement('div');
-    prompt.className = 'traiinc-name-prompt';
+    prompt.className = 'zerochat-name-prompt';
     prompt.innerHTML = `
       <h3>👋 Welcome!</h3>
       <p>Before we start, what's your name?</p>
-      <input type="text" id="traiinc-name-input" placeholder="Your name" autocomplete="name" />
-      <button id="traiinc-name-submit">Start Chat</button>
-      <button class="traiinc-name-skip" id="traiinc-name-skip">Continue as Guest</button>
+      <input type="text" id="zerochat-name-input" placeholder="Your name" autocomplete="name" />
+      <button id="zerochat-name-submit">Start Chat</button>
+      <button class="zerochat-name-skip" id="zerochat-name-skip">Continue as Guest</button>
     `;
     chatWindow.appendChild(prompt);
 
-    const nameInput = document.getElementById('traiinc-name-input');
-    const submitBtn = document.getElementById('traiinc-name-submit');
-    const skipBtn = document.getElementById('traiinc-name-skip');
+    const nameInput = document.getElementById('zerochat-name-input');
+    const submitBtn = document.getElementById('zerochat-name-submit');
+    const skipBtn = document.getElementById('zerochat-name-skip');
 
     nameInput.focus();
 
@@ -488,7 +488,7 @@
   bubble.addEventListener('click', function () {
     isOpen = !isOpen;
     if (isOpen) {
-      chatWindow.classList.add('traiinc-visible');
+      chatWindow.classList.add('zerochat-visible');
       bubble.style.display = 'none';
       badge.style.display = 'none';
       if (!ws || ws.readyState !== WebSocket.OPEN) {
@@ -496,14 +496,14 @@
       }
       inputEl.focus();
     } else {
-      chatWindow.classList.remove('traiinc-visible');
+      chatWindow.classList.remove('zerochat-visible');
       bubble.style.display = 'flex';
     }
   });
 
-  document.querySelector('.traiinc-close').addEventListener('click', function () {
+  document.querySelector('.zerochat-close').addEventListener('click', function () {
     isOpen = false;
-    chatWindow.classList.remove('traiinc-visible');
+    chatWindow.classList.remove('zerochat-visible');
     bubble.style.display = 'flex';
   });
 
@@ -583,7 +583,7 @@
           break;
 
         case 'error':
-          console.error('TraiincBot error:', data.message);
+          console.error('ZeroChat error:', data.message);
           break;
       }
     };
@@ -634,7 +634,7 @@
   // --- Render message ---
   function appendMessage(sender, content, animate) {
     const div = document.createElement('div');
-    div.className = 'traiinc-msg ' + sender;
+    div.className = 'zerochat-msg ' + sender;
 
     const labels = {
       ai: '🤖 AI',
@@ -644,7 +644,7 @@
 
     let html = '';
     if (labels[sender]) {
-      html += '<div class="traiinc-msg-badge">' + labels[sender] + '</div>';
+      html += '<div class="zerochat-msg-badge">' + labels[sender] + '</div>';
     }
     html += '<div>' + escapeHtml(content) + '</div>';
     div.innerHTML = html;

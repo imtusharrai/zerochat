@@ -640,8 +640,15 @@ RULES:
 
     // Handle owner reply (called by Worker on Telegram webhook)
     if (url.pathname === '/owner-reply' && request.method === 'POST') {
+      // FIX V12: Verify internal auth — only the Worker can call this
+      if (request.headers.get('X-Internal-Secret') !== this.env.TELEGRAM_WEBHOOK_SECRET) {
+        return new Response('Unauthorized', { status: 401 });
+      }
       const body = (await request.json()) as { text: string };
-      await this.handleOwnerReply(body.text);
+      // FIX V17: Length limit on owner reply
+      const text = (body.text || '').slice(0, MAX_MESSAGE_LENGTH);
+      if (!text.trim()) return new Response('Empty', { status: 400 });
+      await this.handleOwnerReply(text);
       return new Response('OK');
     }
 
