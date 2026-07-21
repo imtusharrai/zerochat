@@ -68,7 +68,7 @@ export class ChatRoom implements DurableObject {
   private getMeta(key: string): string | null {
     const row = this.ctx.storage.sql
       .exec('SELECT value FROM meta WHERE key = ?', key)
-      .one();
+      .toArray()[0];
     return row ? (row.value as string) : null;
   }
 
@@ -118,13 +118,13 @@ export class ChatRoom implements DurableObject {
     // Get or initialize minute count
     let minuteRow = this.ctx.storage.sql
       .exec('SELECT count FROM rate_limit WHERE window = ?', minuteWindow)
-      .one();
+      .toArray()[0];
     const minuteCount = minuteRow ? (minuteRow.count as number) : 0;
 
     // Get or initialize day count
     let dayRow = this.ctx.storage.sql
       .exec('SELECT count FROM rate_limit WHERE window = ?', dayWindow)
-      .one();
+      .toArray()[0];
     const dayCount = dayRow ? (dayRow.count as number) : 0;
 
     if (minuteCount >= MAX_MESSAGES_PER_MINUTE) {
@@ -284,6 +284,10 @@ export class ChatRoom implements DurableObject {
         this.ctx.id.toString(),
         { expirationTtl: 86400 * 30 } // 30 days
       );
+    } else {
+      // Fallback for regular groups without topics enabled
+      this.setMeta('thread_id', '0');
+      threadId = 0;
     }
 
     return threadId;
@@ -331,10 +335,10 @@ RULES:
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const response = await (this.env.AI as any).run(
-        '@cf/meta/llama-3.1-8b-instruct',
+        '@cf/meta/llama-3.1-8b-instruct-fp8',
         {
           messages: aiMessages,
           max_tokens: AI_MAX_TOKENS,
@@ -979,7 +983,7 @@ RULES:
   // --- Helper: forward to Telegram ---
   private async forwardToTelegram(text: string): Promise<void> {
     const threadId = this.getThreadId();
-    if (!threadId) return;
+    if (threadId === null) return;
 
     await sendToTopic(
       this.env.TELEGRAM_CHAT_ID,

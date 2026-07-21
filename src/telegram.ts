@@ -82,17 +82,21 @@ export async function createForumTopic(
 
 export async function sendToTopic(
   chatId: string,
-  threadId: number,
+  threadId: number | null,
   text: string,
   token: string
 ): Promise<number | null> {
   const url = makeUrl(token, 'sendMessage');
-  const data = await telegramFetch(url, {
+  const payload: any = {
     chat_id: chatId,
-    message_thread_id: threadId,
     text,
     parse_mode: 'HTML',
-  });
+  };
+  if (threadId && threadId !== 0) {
+    payload.message_thread_id = threadId;
+  }
+  
+  const data = await telegramFetch(url, payload);
 
   if (data.ok && data.result) {
     return (data.result as Record<string, unknown>).message_id as number;

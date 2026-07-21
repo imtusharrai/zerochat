@@ -123,6 +123,10 @@ export default {
 
       // --- Setup webhook helper ---
       if (url.pathname === '/api/setup-webhook' && request.method === 'POST') {
+        const auth = request.headers.get('Authorization');
+        if (auth !== `Bearer ${env.TELEGRAM_WEBHOOK_SECRET}`) {
+          return new Response('Unauthorized', { status: 401, headers: CORS_HEADERS });
+        }
         return handleSetupWebhook(request, env, url);
       }
 

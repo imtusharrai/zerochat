@@ -91,28 +91,27 @@
       50% { transform: scale(1.2); }
     }
 
+    #zerochat-window, #zerochat-window * {
+      box-sizing: border-box;
+    }
     #zerochat-window {
       position: fixed;
-      bottom: 96px;
+      bottom: 24px;
       right: 24px;
       width: 380px;
-      height: 520px;
-      background: #ffffff;
+      height: 600px;
+      max-height: calc(100vh - 48px);
+      background: white;
       border-radius: 16px;
-      box-shadow: 0 8px 48px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
       display: none;
       flex-direction: column;
       overflow: hidden;
-      z-index: 999999;
-      animation: zerochat-slide-up 0.3s ease;
+      z-index: 2147483647;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    @keyframes zerochat-slide-up {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Mobile responsive — full screen */
+    /* Mobile Responsive */
     @media (max-width: 480px) {
       #zerochat-window {
         bottom: 0;
@@ -189,18 +188,19 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
       background: #f8fafc;
     }
 
-    .zerochat-msg {
+    #zerochat-window .zerochat-msg {
       max-width: 85%;
       padding: 10px 14px;
+      margin-bottom: 12px;
       border-radius: 16px;
       font-size: 14px;
       line-height: 1.5;
       word-wrap: break-word;
-      animation: zerochat-fade-in 0.2s ease;
+      animation: zerochat-fade-in 0.3s ease;
+      display: inline-block;
     }
 
     @keyframes zerochat-fade-in {
@@ -244,19 +244,26 @@
 
     .zerochat-typing {
       align-self: flex-start;
-      padding: 12px 16px;
+      background: white;
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 4px;
+      padding: 14px 18px;
+      border-radius: 16px;
       display: none;
+      margin-top: auto;
+      margin-bottom: 4px;
     }
 
     .zerochat-typing.visible {
-      display: flex;
-      gap: 4px;
+      display: inline-flex;
+      gap: 6px;
       align-items: center;
     }
 
     .zerochat-typing span {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       background: #94a3b8;
       border-radius: 50%;
       animation: zerochat-bounce 1.4s infinite ease-in-out;
@@ -415,9 +422,11 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="zerochat-messages" id="zerochat-messages"></div>
-      <div class="zerochat-typing" id="zerochat-typing">
-        <span></span><span></span><span></span>
+      <div class="zerochat-messages" id="zerochat-messages">
+        <!-- Messages will appear here -->
+        <div class="zerochat-typing" id="zerochat-typing">
+          <span></span><span></span><span></span>
+        </div>
       </div>
       <div class="zerochat-input-area">
         <input type="text" id="zerochat-input" placeholder="Type a message..." autocomplete="off" />
@@ -653,7 +662,7 @@
       div.style.animation = 'none';
     }
 
-    messagesEl.appendChild(div);
+    messagesEl.insertBefore(div, typingEl);
     scrollToBottom();
   }
 
