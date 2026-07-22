@@ -17,11 +17,11 @@ const MAX_MESSAGES_PER_MINUTE = 30;
 const MAX_MESSAGES_PER_DAY = 200;
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_NAME_LENGTH = 32;
-const AI_BUDGET_INITIAL = 3;
+const AI_BUDGET_INITIAL = 8;
 const AI_BUDGET_HOT = 15;
 const HISTORY_LIMIT = 50;
-const AI_HISTORY_LIMIT = 3; // Only send last 3 messages to AI to save tokens
-const AI_MAX_TOKENS = 150;
+const AI_HISTORY_LIMIT = 6; // Send last 6 messages to AI for better context
+const AI_MAX_TOKENS = 250;
 const CACHE_TTL_SECONDS = 3600; // 1 hour cache for AI responses
 const CLEANUP_DAYS = 30;
 const INACTIVE_HOURS = 24;
@@ -298,22 +298,34 @@ export class ChatRoom implements DurableObject {
     customerMessage: string,
     history: StoredMessage[]
   ): Promise<string | null> {
-    // Check cache first
-    const cacheKey = `cache:${this.simpleHash(customerMessage)}`;
+    // Check cache first (scoped by session to prevent cross-contamination)
+    const sessionId = this.ctx.id.toString().slice(0, 8);
+    const cacheKey = `cache:${sessionId}:${this.simpleHash(customerMessage)}`;
     const cached = await this.env.THREAD_MAP.get(cacheKey);
     if (cached) {
       return cached;
     }
 
     const context = await this.loadBusinessContext();
-    const systemPrompt = `${context}
+    const customerName = this.getMeta('customer_name') ?? 'there';
+    const systemPrompt = `You are the AI sales assistant for Traiinc. Your name is "Traiinc AI". You are enthusiastic, confident, and genuinely helpful.
+
+BUSINESS CONTEXT:
+${context}
+
+YOUR PERSONALITY & APPROACH:
+- Greet the customer warmly by name ("${customerName}") if you know it.
+- Be proactive: don't just answer questions — suggest products, highlight benefits, and guide the customer toward a purchase.
+- Use a friendly, conversational tone with occasional emojis (but not excessive).
+- When discussing products or services, emphasize unique value propositions and create excitement.
+- If a customer seems interested, nudge them toward trying or buying with confidence (e.g., "You'll love this!" or "This is perfect for what you need!").
+- Build trust by being knowledgeable and honest. If you don't know something, say: "Great question! Let me connect you with our product specialist who can give you the exact details."
 
 RULES:
-- Keep replies concise (under 2 sentences when possible).
-- Never invent information not provided in the context above.
-- Be warm, friendly, and professional.
-- If you cannot answer from the given context, say: "Let me check with the team and get back to you!"
-- At the VERY END of your response, on a new line, append exactly one of these tags (the customer won't see it):
+- Keep replies concise (2-3 sentences max). Be punchy and impactful.
+- Never invent product details, pricing, or features not provided in the context above.
+- Never ask for personal information (name, email, phone) yourself. The system handles that separately.
+- At the VERY END of your response, on a new line, append exactly one of these hidden tags (the customer will NOT see it):
 [INTENT:HOT] — Customer asked about specific products, pricing, quantities, or wants to buy.
 [INTENT:WARM] — Customer is browsing or asking general questions.
 [INTENT:COLD] — Customer seems off-topic (jobs, selling services, general info).`;
@@ -391,34 +403,22 @@ RULES:
   }
 
   // --- Info collection flows ---
+  // Returns the NEXT prompt to show and what key to save the user's CURRENT input under.
   private getInfoCollectionResponse(
     visitorType: VisitorType,
     step: FlowStep,
-    userInput: string
+    _userInput: string
   ): { response: string; nextStep: FlowStep; saveKey?: string } {
-    // Save previous input
-    const saves: Record<FlowStep, string> = {
-      ask_name: 'name',
-      ask_email: 'email',
-      ask_phone: 'phone',
-      ask_position: 'position',
-      ask_company: 'company',
-      ask_product: 'product',
-      ask_order_number: 'order_number',
-      ask_issue: 'issue',
-      done: '',
-    };
-
     if (visitorType === 'job_seeker') {
-      return this.jobSeekerFlow(step, userInput);
+      return this.jobSeekerFlow(step, _userInput);
     } else if (visitorType === 'vendor') {
-      return this.vendorFlow(step, userInput);
+      return this.vendorFlow(step, _userInput);
     } else if (visitorType === 'complaint') {
-      return this.complaintFlow(step, userInput);
+      return this.complaintFlow(step, _userInput);
     }
 
     // Default: generic info collection
-    return this.genericInfoFlow(step, userInput);
+    return this.genericInfoFlow(step, _userInput);
   }
 
   private jobSeekerFlow(
@@ -540,27 +540,27 @@ RULES:
       case 'ask_name':
         return {
           response:
-            "To connect you with the right person, could you share a few details?\n\nWhat's your name?",
+            "I'd love to connect you with one of our specialists! 😊 Could you share your name?",
           nextStep: 'ask_email',
+          saveKey: 'name',
         };
       case 'ask_email':
         return {
-          response: `Hi ${this.getCollectedInfo('name') || 'there'}! What's your email address?`,
+          response: `Great to meet you, ${this.getCollectedInfo('name') || 'there'}! 🎉 What's the best email to reach you at?`,
           nextStep: 'ask_phone',
-          saveKey: 'name',
+          saveKey: 'email',
         };
       case 'ask_phone':
         return {
-          response: 'And a phone number where we can reach you?',
+          response: 'Almost there! What\'s your phone number so our team can give you a quick call?',
           nextStep: 'done',
-          saveKey: 'email',
+          saveKey: 'phone',
         };
       case 'done':
         return {
           response:
-            "Thanks! 🙏 Our team will get in touch with you shortly. Have a great day!",
+            "You're all set! 🎉 Our team will reach out to you very soon. We're excited to help you!",
           nextStep: 'done',
-          saveKey: 'phone',
         };
       default:
         return { response: '', nextStep: 'done' };
@@ -742,6 +742,8 @@ RULES:
           this.sendBotMessage(
             'This conversation has ended. Please refresh to start a new one.'
           );
+          // Also send error type so widget can auto-reset the session
+          this.broadcast({ type: 'error', message: 'This conversation has ended.' });
           break;
       }
 
@@ -846,8 +848,8 @@ RULES:
       this.setMeta('flow_step', 'ask_name');
 
       const handoffMsg = withinHours
-        ? "I'd love to help further! Let me connect you with our team for more details. Could you share your name?"
-        : `I'd love to help further! Our team is available during business hours. Could you share your name so we can reach out?`;
+        ? "This has been a great chat! 🙌 I'd love to have one of our product specialists follow up with you personally. Could you share your name so I can connect you?"
+        : "This has been a great chat! 🙌 Our team will be back online during business hours. Could you share your name so we can reach out to you?";
 
       this.sendBotMessage(handoffMsg);
       await this.forwardToTelegram(`💬 Customer: ${escapeTelegramHtml(text)}\n\n⚠️ AI budget exhausted — collecting info for handoff`);
@@ -908,7 +910,7 @@ RULES:
         this.setMeta('conv_state', 'collecting_info');
         this.setMeta('flow_step', 'ask_name');
         this.sendBotMessage(
-          "I'd like to connect you with the right person. Could you share your name?"
+          "I appreciate you chatting with me! 😊 Let me connect you with someone from our team who can help you further. What's your name?"
         );
       }
     }
@@ -918,27 +920,25 @@ RULES:
     const visitorType = this.getVisitorType();
     const currentStep = this.getFlowStep();
 
+    // Forward every user message to Telegram immediately (Bug 2 fix)
+    await this.forwardToTelegram(`💬 Customer: ${escapeTelegramHtml(text)}`);
+
+    // Get the response config for the CURRENT step
     const { response, nextStep, saveKey } = this.getInfoCollectionResponse(
       visitorType,
       currentStep,
       text
     );
 
-    // Save the user's input from the PREVIOUS step
+    // Save the user's input under the key for the CURRENT step (Bug 1 fix)
     if (saveKey) {
       this.saveCollectedInfo(saveKey, text);
     }
 
-    if (nextStep === 'done' && currentStep === 'done') {
-      // All info collected — save final input and send summary to Telegram
-      if (saveKey) {
-        this.saveCollectedInfo(saveKey, text);
-      }
-
+    if (currentStep === 'done') {
+      // All info collected — send final message and summary to Telegram
       this.sendBotMessage(response);
-      this.saveMessage('bot', response);
 
-      // Send formatted summary to Telegram
       const summary = this.formatCollectedInfoForTelegram();
       await this.forwardToTelegram(summary);
 
@@ -946,9 +946,9 @@ RULES:
       return;
     }
 
+    // Advance to the next step and send the next prompt
     this.setMeta('flow_step', nextStep);
     this.sendBotMessage(response);
-    this.saveMessage('bot', response);
   }
 
   // --- Handle owner reply from Telegram ---

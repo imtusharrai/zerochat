@@ -1,8 +1,7 @@
 /**
- * ZeroChat — Embeddable Chat Widget
+ * ZeroChat — Premium Embeddable Chat Widget
  * 
  * Usage: <script src="https://your-worker.workers.dev/widget.js"></script>
- * Auto-detects API URL from its own script src. Zero configuration.
  */
 (function () {
   'use strict';
@@ -13,7 +12,7 @@
   const SESSION_KEY = 'zerochat_session_id';
   const NAME_KEY = 'zerochat_customer_name';
 
-  // Auto-detect API URL from script src
+  // Auto-detect API URL
   const scriptEl = document.currentScript;
   const API_BASE = scriptEl
     ? new URL(scriptEl.src).origin
@@ -27,53 +26,66 @@
   let isOpen = false;
   let isConnected = false;
   let typingTimeout = null;
+  let hasHistory = false;
 
   if (!sessionId) {
     sessionId = crypto.randomUUID();
     localStorage.setItem(SESSION_KEY, sessionId);
   }
 
-  // --- Styles ---
+  // --- Styles (Vibrant Dark Theme) ---
   const styles = document.createElement('style');
   styles.textContent = `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
     #zerochat-widget * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    :root {
+      --zc-bg: #09090b;
+      --zc-panel: #18181b;
+      --zc-panel-hover: #27272a;
+      --zc-text: #f4f4f5;
+      --zc-text-dim: #a1a1aa;
+      --zc-accent-1: #c026d3; /* Fuchsia */
+      --zc-accent-2: #7c3aed; /* Violet */
+      --zc-border: rgba(255, 255, 255, 0.1);
+      --zc-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     }
 
     #zerochat-bubble {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.4);
+      background: linear-gradient(135deg, var(--zc-accent-1), var(--zc-accent-2));
+      box-shadow: 0 8px 32px rgba(192, 38, 211, 0.4);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
       z-index: 999999;
     }
 
     #zerochat-bubble:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 32px rgba(99, 102, 241, 0.5);
+      transform: scale(1.08);
+      box-shadow: 0 12px 40px rgba(192, 38, 211, 0.6);
     }
 
     #zerochat-bubble svg {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       fill: white;
     }
 
-    #zerochat-bubble .zerochat-badge {
+    .zerochat-badge {
       position: absolute;
       top: -2px;
       right: -2px;
@@ -81,7 +93,7 @@
       height: 18px;
       background: #ef4444;
       border-radius: 50%;
-      border: 2px solid white;
+      border: 2px solid var(--zc-bg);
       display: none;
       animation: zerochat-pulse 2s infinite;
     }
@@ -94,32 +106,38 @@
     #zerochat-window, #zerochat-window * {
       box-sizing: border-box;
     }
+    
     #zerochat-window {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      width: 380px;
-      height: 600px;
+      width: 400px;
+      height: 700px;
       max-height: calc(100vh - 48px);
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      background: var(--zc-bg);
+      border-radius: 24px;
+      border: 1px solid var(--zc-border);
+      box-shadow: var(--zc-shadow);
       display: none;
       flex-direction: column;
       overflow: hidden;
       z-index: 2147483647;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--zc-text);
+      /* Glassmorphism */
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(9, 9, 11, 0.85);
     }
 
-    /* Mobile Responsive */
     @media (max-width: 480px) {
       #zerochat-window {
         bottom: 0;
         right: 0;
         width: 100vw;
         height: 100vh;
-        height: 100dvh;
+        max-height: 100vh;
         border-radius: 0;
+        border: none;
       }
       #zerochat-bubble {
         bottom: 16px;
@@ -127,18 +145,23 @@
       }
     }
 
-    #zerochat-window.zerochat-visible {
-      display: flex;
+    .zerochat-visible {
+      display: flex !important;
+      animation: zerochat-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes zerochat-slide-up {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .zerochat-header {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      padding: 16px 20px;
+      padding: 20px 24px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      flex-shrink: 0;
+      align-items: center;
+      border-bottom: 1px solid var(--zc-border);
+      background: rgba(255,255,255,0.02);
     }
 
     .zerochat-header-info {
@@ -148,108 +171,246 @@
     }
 
     .zerochat-header-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--zc-accent-1), var(--zc-accent-2));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(192, 38, 211, 0.3);
     }
 
     .zerochat-header-text h3 {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
+      margin: 0 0 2px 0;
     }
 
     .zerochat-header-text p {
       font-size: 12px;
-      opacity: 0.85;
+      color: var(--zc-text-dim);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .zerochat-status-dot {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      display: inline-block;
     }
 
     .zerochat-close {
-      background: none;
+      background: rgba(255,255,255,0.05);
       border: none;
-      color: white;
       cursor: pointer;
-      padding: 4px;
-      border-radius: 8px;
-      transition: background 0.2s;
+      color: var(--zc-text-dim);
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
     }
 
     .zerochat-close:hover {
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.1);
+      color: white;
     }
 
+    /* --- Views --- */
+    .zerochat-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .zerochat-hidden {
+      display: none !important;
+    }
+
+    /* --- Home View --- */
+    .zerochat-home {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .zerochat-mascot {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, rgba(192, 38, 211, 0.2), rgba(124, 58, 237, 0.2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      box-shadow: 0 0 40px rgba(192, 38, 211, 0.2);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .zerochat-home h2 {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      background: linear-gradient(to right, #fff, #a1a1aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .zerochat-home p {
+      color: var(--zc-text-dim);
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .zerochat-suggestions {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .zerochat-suggestion-card {
+      background: var(--zc-panel);
+      border: 1px solid var(--zc-border);
+      padding: 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+
+    .zerochat-suggestion-card:hover {
+      background: var(--zc-panel-hover);
+      border-color: rgba(192, 38, 211, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .zerochat-suggestion-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(192, 38, 211, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .zerochat-suggestion-text h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--zc-text);
+      margin-bottom: 2px;
+    }
+
+    .zerochat-suggestion-text p {
+      font-size: 12px;
+      color: var(--zc-text-dim);
+      margin: 0;
+      text-align: left;
+    }
+
+    /* --- Chat View --- */
     .zerochat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      background: #f8fafc;
+      scroll-behavior: smooth;
+    }
+
+    .zerochat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    .zerochat-messages::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
     }
 
     #zerochat-window .zerochat-msg {
       max-width: 85%;
-      padding: 10px 14px;
-      margin-bottom: 12px;
-      border-radius: 16px;
+      padding: 12px 18px;
+      margin-bottom: 16px;
       font-size: 14px;
       line-height: 1.5;
       word-wrap: break-word;
-      animation: zerochat-fade-in 0.3s ease;
+      animation: zerochat-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       display: inline-block;
     }
 
     @keyframes zerochat-fade-in {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .zerochat-msg.customer {
       align-self: flex-end;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: linear-gradient(135deg, var(--zc-accent-1), var(--zc-accent-2));
       color: white;
-      border-bottom-right-radius: 4px;
+      border-radius: 20px 20px 4px 20px;
+      box-shadow: 0 4px 12px rgba(192, 38, 211, 0.2);
     }
 
     .zerochat-msg.ai,
     .zerochat-msg.bot {
       align-self: flex-start;
-      background: white;
-      color: #1e293b;
-      border: 1px solid #e2e8f0;
-      border-bottom-left-radius: 4px;
+      background: var(--zc-panel);
+      color: var(--zc-text);
+      border: 1px solid var(--zc-border);
+      border-radius: 20px 20px 20px 4px;
     }
 
     .zerochat-msg.owner {
       align-self: flex-start;
-      background: #ecfdf5;
-      color: #065f46;
-      border: 1px solid #a7f3d0;
-      border-bottom-left-radius: 4px;
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 20px 20px 20px 4px;
     }
 
     .zerochat-msg-badge {
       display: inline-block;
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 4px;
-      opacity: 0.7;
+      margin-bottom: 6px;
+      opacity: 0.8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
+    /* --- Typing Indicator --- */
     .zerochat-typing {
       align-self: flex-start;
-      background: white;
-      color: #1e293b;
-      border: 1px solid #e2e8f0;
-      border-bottom-left-radius: 4px;
-      padding: 14px 18px;
-      border-radius: 16px;
+      background: var(--zc-panel);
+      border: 1px solid var(--zc-border);
+      border-radius: 20px 20px 20px 4px;
+      padding: 16px 20px;
       display: none;
       margin-top: auto;
       margin-bottom: 4px;
@@ -264,9 +425,9 @@
     .zerochat-typing span {
       width: 6px;
       height: 6px;
-      background: #94a3b8;
+      background: var(--zc-text-dim);
       border-radius: 50%;
-      animation: zerochat-bounce 1.4s infinite ease-in-out;
+      animation: zerochat-bounce 1.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .zerochat-typing span:nth-child(1) { animation-delay: 0s; }
@@ -274,129 +435,150 @@
     .zerochat-typing span:nth-child(3) { animation-delay: 0.4s; }
 
     @keyframes zerochat-bounce {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-4px); opacity: 1; }
     }
 
+    /* --- Input Area --- */
     .zerochat-input-area {
-      padding: 12px 16px;
-      border-top: 1px solid #e2e8f0;
+      padding: 16px 24px 20px;
+      border-top: 1px solid var(--zc-border);
       display: flex;
-      gap: 8px;
+      gap: 12px;
       align-items: center;
-      background: white;
+      background: rgba(255,255,255,0.01);
       flex-shrink: 0;
     }
 
-    .zerochat-input-area input {
+    .zerochat-input-wrapper {
       flex: 1;
-      padding: 10px 14px;
-      border: 1px solid #e2e8f0;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .zerochat-input-area input {
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--zc-panel);
+      border: 1px solid var(--zc-border);
+      color: var(--zc-text);
       border-radius: 24px;
       font-size: 14px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.2s;
+    }
+
+    .zerochat-input-area input::placeholder {
+      color: #52525b;
     }
 
     .zerochat-input-area input:focus {
-      border-color: #6366f1;
+      border-color: rgba(192, 38, 211, 0.5);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 0 0 4px rgba(192, 38, 211, 0.1);
     }
 
     .zerochat-send-btn {
-      width: 40px;
-      height: 40px;
-      border: none;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: linear-gradient(135deg, var(--zc-accent-1), var(--zc-accent-2));
       color: white;
+      border: none;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s, opacity 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
       flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(192, 38, 211, 0.3);
     }
 
     .zerochat-send-btn:hover {
       transform: scale(1.05);
-    }
-
-    .zerochat-send-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+      box-shadow: 0 6px 16px rgba(192, 38, 211, 0.5);
     }
 
     .zerochat-footer {
       text-align: center;
-      padding: 6px;
+      padding-bottom: 12px;
       font-size: 11px;
-      color: #94a3b8;
-      background: white;
-      border-top: 1px solid #f1f5f9;
-      flex-shrink: 0;
+      color: #52525b;
+      background: rgba(255,255,255,0.01);
     }
 
-    /* Name prompt overlay */
+    /* --- Name Prompt Overlay --- */
     .zerochat-name-prompt {
       position: absolute;
-      inset: 0;
-      background: white;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 10;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 32px;
-      gap: 16px;
-      z-index: 10;
+      text-align: center;
+      border-radius: 24px;
     }
 
     .zerochat-name-prompt h3 {
-      font-size: 18px;
-      color: #1e293b;
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: white;
     }
 
     .zerochat-name-prompt p {
+      color: var(--zc-text-dim);
+      margin-bottom: 24px;
       font-size: 14px;
-      color: #64748b;
-      text-align: center;
     }
 
     .zerochat-name-prompt input {
       width: 100%;
-      max-width: 260px;
-      padding: 12px 16px;
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
+      padding: 14px 20px;
+      background: var(--zc-panel);
+      border: 1px solid var(--zc-border);
+      border-radius: 16px;
       font-size: 15px;
+      margin-bottom: 16px;
+      color: white;
       outline: none;
-      transition: border-color 0.2s;
+      text-align: center;
     }
 
     .zerochat-name-prompt input:focus {
-      border-color: #6366f1;
+      border-color: var(--zc-accent-1);
     }
 
     .zerochat-name-prompt button {
-      padding: 12px 32px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      width: 100%;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, var(--zc-accent-1), var(--zc-accent-2));
       color: white;
       border: none;
-      border-radius: 12px;
+      border-radius: 16px;
       font-size: 15px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       transition: transform 0.2s;
     }
 
     .zerochat-name-prompt button:hover {
-      transform: scale(1.05);
+      transform: translateY(-2px);
     }
 
     .zerochat-name-skip {
       background: none !important;
-      color: #94a3b8 !important;
+      color: var(--zc-text-dim) !important;
       font-size: 13px !important;
-      padding: 8px !important;
+      padding: 12px !important;
+      margin-top: 8px;
     }
   `;
   document.head.appendChild(styles);
@@ -412,27 +594,62 @@
     <div id="zerochat-window">
       <div class="zerochat-header">
         <div class="zerochat-header-info">
-          <div class="zerochat-header-avatar">💬</div>
+          <div class="zerochat-header-avatar">🤖</div>
           <div class="zerochat-header-text">
-            <h3>Chat with us</h3>
-            <p id="zerochat-status">Connecting...</p>
+            <h3>Traiinc AI</h3>
+            <p><span class="zerochat-status-dot"></span> <span id="zerochat-status">Online</span></p>
           </div>
         </div>
         <button class="zerochat-close" aria-label="Close chat">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="zerochat-messages" id="zerochat-messages">
+
+      <div class="zerochat-view zerochat-home" id="zerochat-home">
+        <div class="zerochat-mascot">🤖</div>
+        <h2>Hello, there!</h2>
+        <p>How can I help you today? Choose a topic below or type your own question.</p>
+        
+        <div class="zerochat-suggestions">
+          <div class="zerochat-suggestion-card" data-prompt="What are your special offers?">
+            <div class="zerochat-suggestion-icon">🎁</div>
+            <div class="zerochat-suggestion-text">
+              <h4>Special Offers</h4>
+              <p>See our latest deals</p>
+            </div>
+          </div>
+          <div class="zerochat-suggestion-card" data-prompt="How do I get in touch with sales?">
+            <div class="zerochat-suggestion-icon">🤝</div>
+            <div class="zerochat-suggestion-text">
+              <h4>Talk to Sales</h4>
+              <p>Connect with our human team</p>
+            </div>
+          </div>
+          <div class="zerochat-suggestion-card" data-prompt="Tell me about your services">
+            <div class="zerochat-suggestion-icon">⚡</div>
+            <div class="zerochat-suggestion-text">
+              <h4>Our Services</h4>
+              <p>Learn what we can do for you</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="zerochat-view zerochat-messages zerochat-hidden" id="zerochat-messages">
         <!-- Messages will appear here -->
         <div class="zerochat-typing" id="zerochat-typing">
           <span></span><span></span><span></span>
         </div>
       </div>
+
       <div class="zerochat-input-area">
-        <input type="text" id="zerochat-input" placeholder="Type a message..." autocomplete="off" />
+        <div class="zerochat-input-wrapper">
+          <input type="text" id="zerochat-input" placeholder="Type a message..." autocomplete="off" />
+        </div>
         <button class="zerochat-send-btn" id="zerochat-send" aria-label="Send message">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
+      </div>
       <div class="zerochat-footer">Developed by Tushar Rai & <a href="https://traiinc.com" target="_blank" style="color: inherit; text-decoration: underline;">Trai inc</a></div>
     </div>
   `;
@@ -441,12 +658,30 @@
   // --- DOM refs ---
   const bubble = document.getElementById('zerochat-bubble');
   const chatWindow = document.getElementById('zerochat-window');
+  const homeView = document.getElementById('zerochat-home');
   const messagesEl = document.getElementById('zerochat-messages');
   const inputEl = document.getElementById('zerochat-input');
   const sendBtn = document.getElementById('zerochat-send');
   const statusEl = document.getElementById('zerochat-status');
   const typingEl = document.getElementById('zerochat-typing');
   const badge = bubble.querySelector('.zerochat-badge');
+
+  // --- View Toggle Logic ---
+  function showChatView() {
+    homeView.classList.add('zerochat-hidden');
+    messagesEl.classList.remove('zerochat-hidden');
+  }
+
+  // --- Suggestion Cards ---
+  document.querySelectorAll('.zerochat-suggestion-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const prompt = card.getAttribute('data-prompt');
+      if (prompt) {
+        inputEl.value = prompt;
+        sendMessage();
+      }
+    });
+  });
 
   // --- Name prompt (shown on first open if no name stored) ---
   function showNamePrompt() {
@@ -499,8 +734,11 @@
       chatWindow.classList.add('zerochat-visible');
       bubble.style.display = 'none';
       badge.style.display = 'none';
+      
       if (!ws || ws.readyState !== WebSocket.OPEN) {
         showNamePrompt();
+      } else {
+        if (hasHistory) showChatView();
       }
       inputEl.focus();
     } else {
@@ -527,11 +765,13 @@
 
     ws = new WebSocket(wsUrl);
     statusEl.textContent = 'Connecting...';
+    document.querySelector('.zerochat-status-dot').style.background = '#eab308'; // Yellow
 
     ws.onopen = function () {
       isConnected = true;
       reconnectAttempts = 0;
       statusEl.textContent = 'Online';
+      document.querySelector('.zerochat-status-dot').style.background = '#10b981'; // Green
 
       // Send init message
       ws.send(JSON.stringify({
@@ -555,30 +795,44 @@
 
         case 'history':
           // Clear existing messages and render history
-          messagesEl.innerHTML = '';
+          messagesEl.innerHTML = `
+            <div class="zerochat-typing" id="zerochat-typing">
+              <span></span><span></span><span></span>
+            </div>
+          `;
+          // Re-grab the typing element reference after innerHTML overwrite
+          const newTypingEl = document.getElementById('zerochat-typing');
+          
           if (data.messages && data.messages.length > 0) {
+            hasHistory = true;
+            if (isOpen) showChatView();
+
             data.messages.forEach(function (msg) {
-              appendMessage(msg.sender, msg.content, false);
+              appendMessage(msg.sender, msg.content, false, newTypingEl);
             });
             scrollToBottom();
           }
           break;
 
         case 'message':
-          // Don't re-render customer messages (we already showed them locally)
-          if (data.sender !== 'customer') {
-            appendMessage(data.sender, data.content, true);
-            hideTyping();
+          // Skip echoed customer messages (we already show them optimistically)
+          if (data.sender === 'customer') break;
 
-            // Play sound if tab not focused
-            if (document.hidden && isOpen) {
-              playNotificationSound();
-            }
+          hasHistory = true;
+          if (isOpen) showChatView();
 
-            // Show badge if window is closed
-            if (!isOpen) {
-              badge.style.display = 'block';
-            }
+          const msgTypingEl = document.getElementById('zerochat-typing');
+          appendMessage(data.sender, data.content, true, msgTypingEl);
+          hideTyping();
+
+          // Play sound if chat window is closed OR tab is hidden
+          if (!isOpen || document.hidden) {
+            playNotificationSound();
+          }
+
+          // Show badge if window is closed
+          if (!isOpen) {
+            badge.style.display = 'block';
           }
           break;
 
@@ -586,12 +840,20 @@
           showTyping();
           break;
 
-        case 'rate_limited':
-          appendMessage('bot', data.message, true);
+        case 'rate_limited': {
+          const rlTypingEl = document.getElementById('zerochat-typing');
+          appendMessage('bot', data.message, true, rlTypingEl);
           break;
+        }
 
         case 'error':
           console.error('ZeroChat error:', data.message);
+          // If conversation is closed, reset session so user can start fresh
+          if (data.message && data.message.includes('ended')) {
+            localStorage.removeItem(SESSION_KEY);
+            sessionId = crypto.randomUUID();
+            localStorage.setItem(SESSION_KEY, sessionId);
+          }
           break;
       }
     };
@@ -599,6 +861,7 @@
     ws.onclose = function () {
       isConnected = false;
       statusEl.textContent = 'Reconnecting...';
+      document.querySelector('.zerochat-status-dot').style.background = '#ef4444'; // Red
       scheduleReconnect();
     };
 
@@ -622,10 +885,14 @@
     const text = inputEl.value.trim();
     if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
 
+    showChatView();
+    hasHistory = true;
+
     ws.send(JSON.stringify({ type: 'message', text: text }));
 
     // Optimistically show the message locally
-    appendMessage('customer', text, true);
+    const currTypingEl = document.getElementById('zerochat-typing');
+    appendMessage('customer', text, true, currTypingEl);
 
     inputEl.value = '';
     inputEl.focus();
@@ -640,7 +907,7 @@
   });
 
   // --- Render message ---
-  function appendMessage(sender, content, animate) {
+  function appendMessage(sender, content, animate, referenceTypingEl) {
     const div = document.createElement('div');
     div.className = 'zerochat-msg ' + sender;
 
@@ -661,22 +928,31 @@
       div.style.animation = 'none';
     }
 
-    messagesEl.insertBefore(div, typingEl);
+    if (referenceTypingEl) {
+      messagesEl.insertBefore(div, referenceTypingEl);
+    } else {
+      messagesEl.appendChild(div);
+    }
     scrollToBottom();
   }
 
   // --- Typing indicator ---
   function showTyping() {
-    typingEl.classList.add('visible');
-    scrollToBottom();
-
-    clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(hideTyping, 10000); // Auto-hide after 10s
+    const el = document.getElementById('zerochat-typing');
+    if (el) {
+      el.classList.add('visible');
+      scrollToBottom();
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(hideTyping, 10000);
+    }
   }
 
   function hideTyping() {
-    typingEl.classList.remove('visible');
-    clearTimeout(typingTimeout);
+    const el = document.getElementById('zerochat-typing');
+    if (el) {
+      el.classList.remove('visible');
+      clearTimeout(typingTimeout);
+    }
   }
 
   // --- Utilities ---

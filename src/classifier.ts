@@ -61,7 +61,7 @@ function containsKeyword(text: string, keywords: string[]): boolean {
 
 function isSpam(text: string): boolean {
   if (SPAM_PATTERNS.some(pattern => pattern.test(text))) return true;
-  if (text.length > 500) return true;
+  if (text.length > 2000) return true;
   return false;
 }
 
